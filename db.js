@@ -72,6 +72,38 @@ async function updateOrderPaymentStatus(id, status) {
     if (error) console.error('Error updating order payment status:', error);
 }
 
+// Settings API
+async function getSettings() {
+    const { data, error } = await supabaseClient.from('settings').select('*').eq('id', 1).single();
+    if (error) {
+        console.error('Error fetching settings:', error);
+        return null;
+    }
+    return data;
+}
+
+async function updateSettings(updates) {
+    const { error } = await supabaseClient.from('settings').update(updates).eq('id', 1);
+    if (error) console.error('Error updating settings:', error);
+}
+
+// Storage API
+async function uploadImage(file) {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    const { error: uploadError } = await supabaseClient.storage.from('images').upload(filePath, file);
+
+    if (uploadError) {
+        console.error('Error uploading image:', uploadError);
+        throw new Error(uploadError.message);
+    }
+
+    const { data } = supabaseClient.storage.from('images').getPublicUrl(filePath);
+    return data.publicUrl;
+}
+
 window.db = {
     getProducts,
     updateProduct,
@@ -79,5 +111,8 @@ window.db = {
     getOrders,
     addOrder,
     updateOrderStatus,
-    updateOrderPaymentStatus
+    updateOrderPaymentStatus,
+    getSettings,
+    updateSettings,
+    uploadImage
 };

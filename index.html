@@ -69,7 +69,7 @@
                 
                 <div class="checkbox-group">
                     <input type="checkbox" id="terms" required>
-                    <label for="terms">I agree to the Terms and Conditions and understand that payment is collected upon delivery or via external link.</label>
+                    <label for="terms"><span id="checkout-terms-text">I agree to the Terms and Conditions and understand that payment is collected upon delivery.</span></label>
                 </div>
 
                 <button type="submit" class="btn-primary">Place Order</button>
@@ -107,9 +107,10 @@
             <div id="admin-dashboard-view" style="display: none;">
                 <div class="flex-between mb-2">
                     <h2>Admin Dashboard</h2>
-                    <div>
+                    <div style="display:flex; gap: 0.5rem; flex-wrap:wrap; justify-content: flex-end;">
                         <button class="btn-secondary btn-small" id="admin-tab-orders" onclick="app.switchAdminTab('orders')" style="background: var(--primary); color: white;">Orders</button>
                         <button class="btn-secondary btn-small" id="admin-tab-products" onclick="app.switchAdminTab('products')">Products</button>
+                        <button class="btn-secondary btn-small" id="admin-tab-settings" onclick="app.switchAdminTab('settings')">Settings</button>
                     </div>
                 </div>
 
@@ -126,6 +127,21 @@
                     <div id="admin-products-list" class="cart-list">
                         <!-- Admin products injected by JS -->
                     </div>
+                </div>
+
+                <!-- Admin Settings Subview -->
+                <div id="admin-settings-view" style="display: none;">
+                    <form id="settings-form" onsubmit="app.saveSettings(event)">
+                        <div class="form-group">
+                            <label>Banner Image (Upload new to replace)</label>
+                            <input type="file" id="settings-banner" class="form-control" accept="image/*">
+                        </div>
+                        <div class="form-group">
+                            <label>Terms & Conditions Text</label>
+                            <textarea id="settings-terms" class="form-control" required rows="4"></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary" style="padding: 0.75rem;">Save Settings</button>
+                    </form>
                 </div>
             </div>
         </main>
@@ -157,8 +173,9 @@
                     <input type="hidden" id="prod-id">
                     
                     <div class="form-group">
-                        <label>Image URL</label>
-                        <input type="url" id="prod-image" class="form-control" placeholder="https://example.com/image.jpg">
+                        <label>Product Image (Upload new to replace)</label>
+                        <input type="file" id="prod-image-file" class="form-control" accept="image/*">
+                        <input type="hidden" id="prod-image-url">
                     </div>
 
                     <div class="form-group">

@@ -23,8 +23,27 @@ const app = (function() {
     // Initialize
     async function init() {
         lucide.createIcons();
+        await loadSettings();
         await refreshProducts();
         updateCartBadge();
+    }
+
+    async function loadSettings() {
+        try {
+            const settings = await window.db.getSettings();
+            if (settings) {
+                if (settings.banner_url) {
+                    const banner = document.querySelector('.home-banner');
+                    banner.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('${settings.banner_url}')`;
+                }
+                if (settings.terms_text) {
+                    const termsEl = document.getElementById('checkout-terms-text');
+                    if (termsEl) termsEl.textContent = settings.terms_text;
+                }
+            }
+        } catch(e) {
+            console.error('Failed to load settings', e);
+        }
     }
 
     async function refreshProducts() {
@@ -289,25 +308,74 @@ const app = (function() {
     function switchAdminTab(subTab) {
         const btnOrders = document.getElementById('admin-tab-orders');
         const btnProducts = document.getElementById('admin-tab-products');
+        const btnSettings = document.getElementById('admin-tab-settings');
         const viewOrders = document.getElementById('admin-orders-view');
         const viewProducts = document.getElementById('admin-products-view');
+        const viewSettings = document.getElementById('admin-settings-view');
+
+        // Reset all tabs
+        [btnOrders, btnProducts, btnSettings].forEach(btn => {
+            if(btn) {
+                btn.style.background = 'var(--border)';
+                btn.style.color = 'var(--text-main)';
+            }
+        });
+        [viewOrders, viewProducts, viewSettings].forEach(view => {
+            if(view) view.style.display = 'none';
+        });
 
         if (subTab === 'orders') {
-            btnOrders.style.background = 'var(--primary)';
-            btnOrders.style.color = 'white';
-            btnProducts.style.background = 'var(--border)';
-            btnProducts.style.color = 'var(--text-main)';
-            viewOrders.style.display = 'block';
-            viewProducts.style.display = 'none';
+            if(btnOrders) { btnOrders.style.background = 'var(--primary)'; btnOrders.style.color = 'white'; }
+            if(viewOrders) viewOrders.style.display = 'block';
             renderAdminOrders();
-        } else {
-            btnProducts.style.background = 'var(--primary)';
-            btnProducts.style.color = 'white';
-            btnOrders.style.background = 'var(--border)';
-            btnOrders.style.color = 'var(--text-main)';
-            viewProducts.style.display = 'block';
-            viewOrders.style.display = 'none';
+        } else if (subTab === 'products') {
+            if(btnProducts) { btnProducts.style.background = 'var(--primary)'; btnProducts.style.color = 'white'; }
+            if(viewProducts) viewProducts.style.display = 'block';
             renderAdminProducts();
+        } else if (subTab === 'settings') {
+            if(btnSettings) { btnSettings.style.background = 'var(--primary)'; btnSettings.style.color = 'white'; }
+            if(viewSettings) viewSettings.style.display = 'block';
+            renderAdminSettings();
+        }
+    }
+
+    async function renderAdminSettings() {
+        const settings = await window.db.getSettings();
+        if (settings) {
+            document.getElementById('settings-terms').value = settings.terms_text || '';
+        }
+    }
+
+    async function saveSettings(e) {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        const ogText = btn.textContent;
+        btn.textContent = 'Saving...';
+        btn.disabled = true;
+
+        try {
+            const termsText = document.getElementById('settings-terms').value;
+            const fileInput = document.getElementById('settings-banner');
+            
+            let updates = { terms_text: termsText };
+            
+            if (fileInput.files.length > 0) {
+                btn.textContent = 'Uploading Image...';
+                const url = await window.db.uploadImage(fileInput.files[0]);
+                updates.banner_url = url;
+            }
+
+            await window.db.updateSettings(updates);
+            alert('Settings saved!');
+            e.target.reset(); // Reset file input
+            await loadSettings(); // Apply immediately
+            renderAdminSettings(); // Repopulate terms
+        } catch (err) {
+            console.error(err);
+            alert('Failed to save settings: ' + err.message);
+        } finally {
+            btn.textContent = ogText;
+            btn.disabled = false;
         }
     }
 
@@ -405,17 +473,18 @@ const app = (function() {
         `).join('');
     }
 
-    // Modal logic
     function openAddProductModal() {
         document.getElementById('product-form').reset();
         document.getElementById('prod-id').value = '';
+        document.getElementById('prod-image-url').value = '';
         document.getElementById('modal-title').textContent = 'Add Product';
         document.getElementById('product-modal').classList.add('active');
     }
 
     function editProduct(p) {
+        document.getElementById('product-form').reset();
         document.getElementById('prod-id').value = p.id;
-        document.getElementById('prod-image').value = p.image || '';
+        document.getElementById('prod-image-url').value = p.image || '';
         document.getElementById('prod-name').value = p.name;
         document.getElementById('prod-price').value = p.price;
         document.getElementById('prod-unit').value = p.unit || 'kg';
@@ -439,7 +508,14 @@ const app = (function() {
 
         try {
             const id = document.getElementById('prod-id').value;
-            const image = document.getElementById('prod-image').value;
+            let image = document.getElementById('prod-image-url').value;
+            const fileInput = document.getElementById('prod-image-file');
+            
+            if (fileInput.files.length > 0) {
+                btn.textContent = 'Uploading Image...';
+                image = await window.db.uploadImage(fileInput.files[0]);
+            }
+
             const name = document.getElementById('prod-name').value;
             const price = parseFloat(document.getElementById('prod-price').value);
             const unit = document.getElementById('prod-unit').value || 'kg';
@@ -480,7 +556,8 @@ const app = (function() {
         openAddProductModal,
         editProduct,
         closeProductModal,
-        saveProduct
+        saveProduct,
+        saveSettings
     };
 })();
 
