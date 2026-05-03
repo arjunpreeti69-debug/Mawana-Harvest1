@@ -28,9 +28,19 @@ const app = (function() {
     }
 
     async function refreshProducts() {
-        document.getElementById('product-list').innerHTML = '<div class="empty-state" style="grid-column:span 2;">Loading products...</div>';
-        cachedProducts = await window.db.getProducts();
-        renderProducts();
+        const productList = document.getElementById('product-list');
+        productList.innerHTML = '<div class="empty-state" style="grid-column:span 2;">Loading products...</div>';
+        
+        try {
+            if (!window.db || !window.db.getProducts) {
+                throw new Error("Database script (db.js) failed to load properly. Check if Supabase loaded.");
+            }
+            const products = await window.db.getProducts();
+            cachedProducts = products || [];
+            renderProducts();
+        } catch (err) {
+            productList.innerHTML = `<div class="empty-state" style="grid-column:span 2; color:red; text-align:left; font-family:monospace; padding:1rem; border:1px solid red; background:#fee;">Error loading products:<br><br>${err.message}</div>`;
+        }
     }
 
     // Navigation
