@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mawana Harvest</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="app.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="app-container">
+        
+        <!-- Header -->
+        <header class="header">
+            <h1><i data-lucide="leaf"></i> Mawana Harvest</h1>
+        </header>
+
+        <!-- Home View -->
+        <main id="home-view" class="view active">
+            <div class="home-banner">
+                <div class="home-banner-text">Fresh From Farm</div>
+            </div>
+            <h2>Fresh Today</h2>
+            <p>Order fresh vegetables directly from the farm.</p>
+            <div id="product-list" class="product-grid">
+                <!-- Products injected by JS -->
+            </div>
+        </main>
+
+        <!-- Cart View -->
+        <main id="cart-view" class="view">
+            <h2>Your Cart</h2>
+            <div id="cart-items" class="cart-list">
+                <!-- Cart items injected by JS -->
+            </div>
+            
+            <div id="cart-empty-state" class="empty-state" style="display: none;">
+                <i data-lucide="shopping-basket" width="48" height="48"></i>
+                <p>Your cart is empty.</p>
+            </div>
+
+            <div id="cart-footer" style="display: none;">
+                <div class="cart-total">
+                    <span>Total</span>
+                    <span id="cart-total-price">₹0</span>
+                </div>
+                <button class="btn-primary" onclick="app.goToCheckout()">Proceed to Checkout</button>
+            </div>
+        </main>
+
+        <!-- Checkout View -->
+        <main id="checkout-view" class="view">
+            <h2>Checkout</h2>
+            <p class="mb-2">Please enter your delivery details.</p>
+            <form id="checkout-form" onsubmit="app.placeOrder(event)">
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" class="form-control" required placeholder="Arjun Kumar">
+                </div>
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" class="form-control" required placeholder="9876543210">
+                </div>
+                <div class="form-group">
+                    <label for="address">Delivery Address</label>
+                    <textarea id="address" class="form-control" required rows="3" placeholder="House no, Street..."></textarea>
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="terms" required>
+                    <label for="terms">I agree to the Terms and Conditions and understand that payment is collected upon delivery or via external link.</label>
+                </div>
+
+                <button type="submit" class="btn-primary">Place Order</button>
+                <button type="button" class="btn-secondary mt-2" style="width: 100%; padding: 1rem;" onclick="app.switchTab('cart')">Back to Cart</button>
+            </form>
+        </main>
+
+        <!-- Confirmation View -->
+        <main id="confirmation-view" class="view">
+            <div class="empty-state">
+                <i data-lucide="check-circle" width="64" height="64" style="color: var(--primary);"></i>
+                <h2 class="mt-2">Order Placed!</h2>
+                <p>Thank you for shopping with Mawana Harvest. Your order will be delivered soon.</p>
+                <button class="btn-primary" onclick="app.switchTab('home')">Continue Shopping</button>
+            </div>
+        </main>
+
+        <!-- Admin View -->
+        <main id="admin-view" class="view">
+            
+            <!-- Admin Login Subview -->
+            <div id="admin-login-view" class="admin-login-view">
+                <i data-lucide="lock" width="48" height="48" style="color: var(--text-muted); margin-bottom: 1rem;"></i>
+                <h2>Admin Access</h2>
+                <p class="mb-2 text-center" style="text-align: center;">Enter PIN to manage inventory and orders.</p>
+                <form id="admin-login-form" style="width: 100%;" onsubmit="app.handleAdminLogin(event)">
+                    <div class="form-group">
+                        <input type="password" id="admin-pin" class="form-control" style="text-align: center; letter-spacing: 0.5rem; font-size: 1.5rem;" required placeholder="PIN">
+                    </div>
+                    <button type="submit" class="btn-primary">Login</button>
+                </form>
+            </div>
+
+            <!-- Admin Dashboard Subview -->
+            <div id="admin-dashboard-view" style="display: none;">
+                <div class="flex-between mb-2">
+                    <h2>Admin Dashboard</h2>
+                    <div>
+                        <button class="btn-secondary btn-small" id="admin-tab-orders" onclick="app.switchAdminTab('orders')" style="background: var(--primary); color: white;">Orders</button>
+                        <button class="btn-secondary btn-small" id="admin-tab-products" onclick="app.switchAdminTab('products')">Products</button>
+                    </div>
+                </div>
+
+                <!-- Admin Orders Subview -->
+                <div id="admin-orders-view">
+                    <div id="admin-orders-list">
+                        <!-- Orders injected by JS -->
+                    </div>
+                </div>
+
+                <!-- Admin Products Subview -->
+                <div id="admin-products-view" style="display: none;">
+                    <button class="btn-primary mb-2" onclick="app.openAddProductModal()" style="padding: 0.75rem;">+ Add Product</button>
+                    <div id="admin-products-list" class="cart-list">
+                        <!-- Admin products injected by JS -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <div class="nav-item active" id="nav-home" onclick="app.switchTab('home')">
+                <i data-lucide="home"></i>
+                <span>Home</span>
+            </div>
+            <div class="nav-item" id="nav-cart" onclick="app.switchTab('cart')">
+                <div class="nav-item-wrapper">
+                    <i data-lucide="shopping-cart"></i>
+                    <span class="nav-badge" id="cart-badge">0</span>
+                </div>
+                <span>Cart</span>
+            </div>
+            <div class="nav-item" id="nav-admin" onclick="app.switchTab('admin')">
+                <i data-lucide="settings"></i>
+                <span>Admin</span>
+            </div>
+        </nav>
+
+        <!-- Add/Edit Product Modal -->
+        <div class="modal-overlay" id="product-modal">
+            <div class="modal-content">
+                <h2 id="modal-title">Add Product</h2>
+                <form id="product-form" onsubmit="app.saveProduct(event)">
+                    <input type="hidden" id="prod-id">
+                    
+                    <div class="form-group">
+                        <label>Image URL</label>
+                        <input type="url" id="prod-image" class="form-control" placeholder="https://example.com/image.jpg">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" id="prod-name" class="form-control" required>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem;">
+                        <div class="form-group" style="flex: 1;">
+                            <label>Price (₹)</label>
+                            <input type="number" id="prod-price" class="form-control" required min="0">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label>Unit</label>
+                            <input type="text" id="prod-unit" class="form-control" required placeholder="kg, bunch, nos" value="kg">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Quantity in Stock</label>
+                        <input type="number" id="prod-quantity" class="form-control" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="prod-available" checked> Available
+                        </label>
+                    </div>
+                    <div class="flex-between mt-2">
+                        <button type="button" class="btn-secondary" onclick="app.closeProductModal()">Cancel</button>
+                        <button type="submit" class="btn-primary" style="margin-top: 0; width: auto; padding: 0.5rem 1rem;">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="db.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
